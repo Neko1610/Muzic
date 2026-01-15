@@ -60,7 +60,7 @@ export default function Login() {
           </div>
 
           <div style={{ marginTop: 18 }}>
-            <div style={styles.label}>Username</div>
+            <div style={styles.label}>Email</div>
             <div style={styles.inputWrap}>
               <span style={styles.inputIcon}>👤</span>
               <input
