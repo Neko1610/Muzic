@@ -1,0 +1,619 @@
+:root{
+  --bg:#f5f7fb;
+  --card:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e5e7eb;
+
+  --primary:#2f6fec;      /* xanh highlight */
+  --primary-weak:#e8f0ff; /* nền xanh nhạt */
+  --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+*{ box-sizing:border-box; }
+html,body,#root{ height:100%; }
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* Layout */
+.admin-shell{
+  display:grid;
+  grid-template-columns: 300px 1fr;
+  gap:18px;
+  padding:18px;
+  min-height:100vh;
+}
+
+.sidebar{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+/* Card */
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+}
+
+/* Profile box */
+.profile{
+  padding:16px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+.avatar{
+  width:68px;
+  height:68px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  font-size:28px;
+  color:#fff;
+  background: linear-gradient(135deg, #2f6fec, #62c3ff);
+}
+.profile .meta{ min-width:0; }
+.profile .name{
+  font-weight:900;
+  font-size:18px;
+  line-height:1.1;
+  margin:0;
+}
+.profile .email{
+  margin-top:6px;
+  font-size:13px;
+  color:var(--muted);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.badge{
+  margin-top:8px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  font-weight:800;
+  color:var(--primary);
+  background:var(--primary-weak);
+  border:1px solid rgba(47,111,236,0.25);
+  padding:6px 10px;
+  border-radius:999px;
+}
+
+/* Nav */
+.nav{
+  padding:14px;
+}
+.nav h4{
+  margin:0 0 10px 0;
+  font-size:13px;
+  color:var(--muted);
+  letter-spacing:0.2px;
+}
+.nav a{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:11px 12px;
+  border-radius:12px;
+  text-decoration:none;
+  color:var(--text);
+  border:1px solid transparent;
+  font-weight:800;
+}
+.nav a:hover{
+  background:#f1f5f9;
+}
+.nav a.active{
+  background:var(--primary-weak);
+  border-color: rgba(47,111,236,0.25);
+  color:var(--primary);
+}
+.nav .icon{
+  width:20px;
+  display:grid;
+  place-items:center;
+}
+
+/* Main content */
+.main{
+  padding:18px;
+}
+.page-title{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+}
+.page-title h1{
+  margin:0;
+  font-size:28px;
+  font-weight:950;
+}
+.page-title p{
+  margin:6px 0 0 0;
+  color:var(--muted);
+}
+
+/* Buttons */
+.btn{
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--text);
+  padding:10px 14px;
+  border-radius:12px;
+  font-weight:900;
+  cursor:pointer;
+}
+.btn:hover{ background:#f8fafc; }
+
+.btn-primary{
+  border-color: rgba(47,111,236,0.35);
+  background: var(--primary);
+  color:#fff;
+}
+.btn-primary:hover{
+  filter:brightness(0.95);
+}
+
+/* Inputs */
+.input{
+  width:100%;
+  padding:12px 12px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:#fff;
+  outline:none;
+}
+.input:focus{
+  border-color: rgba(47,111,236,0.45);
+  box-shadow: 0 0 0 4px rgba(47,111,236,0.12);
+}
+
+/* Table list card row */
+.list{
+  margin-top:12px;
+  display:grid;
+  gap:10px;
+  max-height:62vh;
+  overflow:auto;
+  padding-right:6px;
+}
+.row{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px;
+  background:#fff;
+}
+.row-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+}
+.row-title{
+  font-weight:950;
+  font-size:16px;
+}
+.row-sub{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:12px;
+  word-break:break-word;
+}
+.row-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+/* Modal */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,0.35);
+  display:grid;
+  place-items:center;
+  z-index:9999;
+  padding:14px;
+}
+.modal{
+  width:760px;
+  max-width:95vw;
+  border-radius:16px;
+  background:#fff;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+  padding:16px;
+}
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+.modal-header .t{
+  font-weight:950;
+}
+.grid2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.label{
+  font-size:15px;
+  font-weight:900;
+  margin:10px 0 6px 0;
+  color:#111827;
+}
+.note{
+  margin-top:10px;
+  color:var(--muted);
+  font-size:12px;
+}
+/* =========================
+   USERS PAGE (giữ đúng layout như hình bạn gửi)
+========================= */
+.users-shell{
+  display:grid;
+  grid-template-columns: 420px 1fr;
+  gap:18px;
+  align-items:start;
+}
+
+.users-left,
+.users-right{
+  padding:16px;
+}
+
+.user-item{
+  text-align:left;
+  width:100%;
+  cursor:pointer;
+  background:#fff;
+}
+
+.user-item.active{
+  border-color: rgba(47,111,236,0.45);
+  box-shadow: 0 0 0 4px rgba(47,111,236,0.12);
+}
+
+.users-subcard{
+  padding:14px;
+  box-shadow:none;
+}
+
+.users-subtitle{
+  font-weight:950;
+  margin-bottom:10px;
+}
+
+.users-line{
+  margin-bottom:8px;
+  color: var(--muted);
+}
+.users-line b{ color: var(--text); }
+
+.users-albums{
+  margin-top:18px;
+}
+
+.users-albums-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin: 18px 0 12px;
+}
+
+.users-albums-grid{
+  display:grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap:18px;
+}
+
+.album-item.active,
+.pick-item.active{
+  border-color: rgba(47,111,236,0.45);
+  box-shadow: 0 0 0 4px rgba(47,111,236,0.12);
+}
+
+.album-btn{
+  width:100%;
+  text-align:left;
+  background:transparent;
+  border:none;
+  padding:0;
+  cursor:pointer;
+  color: inherit;
+}
+/* =========================
+   SONGS PAGE
+========================= */
+.songs-head{
+  margin-top:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.songs-head-title{
+  font-size:18px;
+  font-weight:950;
+  color: var(--text);
+}
+
+.songs-list{
+  max-height:62vh;
+}
+
+.songs-row{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+
+.songs-left{
+  flex:1;
+  min-width:0;
+}
+
+.songs-title{
+  font-size:18px;
+  font-weight:950;
+  line-height:1.2;
+  color: var(--text);
+}
+
+.songs-dot{
+  opacity:.55;
+  margin: 0 6px;
+}
+
+.songs-dim{
+  color: var(--muted);
+  font-weight:800;
+}
+
+.songs-tag{
+  display:inline-block;
+  padding:2px 10px;
+  border-radius:999px;
+  background: var(--primary-weak);
+  border:1px solid rgba(47,111,236,0.25);
+  color: var(--primary);
+  font-size:12px;
+  font-weight:900;
+}
+
+.songs-meta{
+  margin-top:8px;
+  color: var(--muted);
+  font-size:13px;
+}
+
+.songs-metaline{
+  margin-top:6px;
+  word-break:break-word;
+}
+
+.songs-mono{
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--muted);
+}
+
+.songs-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+/* nút danger chung */
+.btn-danger{
+  border-color: #fecaca;
+  color: #b91c1c;
+  background: #fff;
+}
+.btn-danger:hover{
+  background: #fef2f2;
+}
+
+.songs-modal-actions{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+  flex-wrap:wrap;
+}
+/* =========================
+   PLAYLISTS PAGE - spacing/highlight/buttons like old
+========================= */
+
+/* header spacing */
+.page-title{
+  margin-bottom: 18px;
+}
+
+/* grid */
+.pl-grid{
+  display:grid;
+  grid-template-columns: 420px 1fr;
+  gap:18px;
+}
+
+/* card padding chuẩn */
+.pl-card{
+  padding:16px;
+}
+
+/* LEFT LIST */
+.pl-left-head{
+  font-weight:950;
+  margin-bottom:10px;
+  color: var(--text);
+}
+
+.pl-item{
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+  background:#fff;
+  transition:.15s ease;
+}
+
+.pl-item:hover{
+  background:#f8fafc;
+}
+
+/* highlight giống cũ */
+.pl-item.is-active{
+  border-color: rgba(47,111,236,0.35);
+  background: var(--primary-weak);
+  box-shadow: 0 0 0 4px rgba(47,111,236,0.10);
+}
+
+.pl-item-btn{
+  width:100%;
+  text-align:left;
+  background:transparent;
+  border:none;
+  padding:0;
+  cursor:pointer;
+  color: var(--text);
+}
+
+.pl-item-name{ font-weight:950; }
+.pl-item-sub{
+  margin-top:6px;
+  color: var(--muted);
+  font-size:12px;
+}
+
+/* actions spacing giống cũ */
+.row-actions{
+  margin-top:12px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+/* RIGHT DETAIL */
+.pl-title{
+  font-weight:950;
+  font-size:18px;
+  color: var(--text);
+}
+
+.pl-toolbar{
+  margin-top:14px;
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.pl-picked{
+  margin-top:10px;
+  color: var(--muted);
+  font-size:13px;
+}
+
+.pl-section{
+  margin-top:14px;
+  font-weight:950;
+  color: var(--text);
+}
+
+.pl-songs{
+  margin-top:10px;
+  display:grid;
+  gap:12px;
+}
+
+.pl-song-row{
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:12px 16px;
+  background:#fff;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.pl-song-text{ font-weight:950; color: var(--text); }
+.pl-song-artist{ color: var(--muted); font-weight:800; }
+
+/* PICK MODAL */
+.pl-pick-list{
+  margin-top:12px;
+  max-height:60vh;
+  overflow:auto;
+  display:grid;
+  gap:10px;
+}
+
+.pl-pick-row{
+  width:100%;
+  text-align:left;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:#fff;
+  cursor:pointer;
+  transition:.15s ease;
+}
+
+.pl-pick-row:hover{ background:#f8fafc; }
+
+.pl-pick-row.is-picked{
+  border-color: rgba(47,111,236,0.35);
+  background: var(--primary-weak);
+  box-shadow: 0 0 0 4px rgba(47,111,236,0.10);
+}
+
+.pl-pick-title{ font-weight:950; color: var(--text); }
+.pl-pick-artist{ color: var(--muted); font-weight:800; }
+.pl-pick-sub{ margin-top:6px; color: var(--muted); font-size:12px; }
+
+.pl-modal-actions{
+  display:flex;
+  gap:12px;
+  margin-top:14px;
+  flex-wrap:wrap;
+}
+
+/* ===== BUTTONS unify like old ===== */
+.btn{
+  min-height:40px;
+  padding:10px 16px;
+  border-radius:12px;
+  font-weight:900;
+}
+
+.btn.btn-primary{
+  background: var(--primary);
+  color:#fff;
+  border-color: rgba(47,111,236,0.35);
+}
+
+.btn.btn-danger{
+  border-color: rgba(239,68,68,0.35);
+  background: rgba(239,68,68,0.10);
+  color:#b91c1c;
+}
+
+.btn.btn-danger:hover{
+  background: rgba(239,68,68,0.16);
+}
+/* Ẩn tab Roles trong sidebar */
+.nav a[href="/admin/roles"]{
+  display: none !important;
+}

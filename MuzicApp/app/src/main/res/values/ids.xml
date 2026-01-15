@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="nav_equilser" type="id" />
+    <item name="nav_themes" type="id" />
+    <item name="nav_cutter" type="id" />
+    <item name="nav_sleep" type="id" />
+    <item name="nav_hiddenfolder" type="id" />
+</resources>
