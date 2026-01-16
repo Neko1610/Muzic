@@ -4,17 +4,27 @@ import { auth, db } from "../firebase";
 import { onValue, ref } from "firebase/database";
 import { signOut } from "firebase/auth";
 
+/* ===== Utils ===== */
 function getInitial(nameOrEmail) {
   const s = String(nameOrEmail || "").trim();
   return s ? s[0].toUpperCase() : "A";
 }
 
+/* ✅ Detect Android (Android Studio / real device đều OK) */
+function isAndroidApp() {
+  if (typeof navigator === "undefined") return false;
+  return /Android/i.test(navigator.userAgent);
+}
+
 export default function AdminLayout() {
   const [me, setMe] = useState(null);
-  const [open, setOpen] = useState(false); // ✅ NEW
+  const [open, setOpen] = useState(false);
   const user = auth.currentUser;
   const navigate = useNavigate();
 
+  const isAndroid = isAndroidApp();
+
+  /* ===== Load user info ===== */
   useEffect(() => {
     if (!user?.uid) return;
     const r = ref(db, `users/${user.uid}`);
@@ -22,11 +32,15 @@ export default function AdminLayout() {
     return () => unsub();
   }, [user?.uid]);
 
+  /* ===== Auto close sidebar when route changed (Android only) ===== */
+  useEffect(() => {
+    if (isAndroid) setOpen(false);
+  }, [location.pathname]);
+
   const name = me?.name || user?.displayName || "admin";
   const email = me?.email || user?.email || "(no email)";
   const role = me?.role || "user";
   const uid = user?.uid || "";
-  const isAndroid = isAndroidWebView();
 
   const handleLogout = async () => {
     const ok = window.confirm("Bạn có chắc muốn đăng xuất?");
@@ -37,7 +51,7 @@ export default function AdminLayout() {
 
   return (
     <div className="admin-shell">
-      {/* SIDEBAR */}
+      {/* ===== SIDEBAR ===== */}
       <aside className={`sidebar ${open ? "open" : ""}`}>
         {/* PROFILE */}
         <div className="card profile">
@@ -57,11 +71,10 @@ export default function AdminLayout() {
         <div className="card nav">
           <h4>Các tab chức năng</h4>
 
-        <NavItem to="/admin/content" icon="🎵" text="Songs" onClick={() => setOpen(false)} />
-        <NavItem to="/admin/categories" icon="🏷️" text="Categories" onClick={() => setOpen(false)} />
-        <NavItem to="/admin/playlists" icon="📚" text="Playlists" onClick={() => setOpen(false)} />
-        <NavItem to="/admin/users" icon="👤" text="Users" onClick={() => setOpen(false)} />
-
+          <NavItem to="/admin/content" icon="🎵" text="Songs" close={() => setOpen(false)} />
+          <NavItem to="/admin/categories" icon="🏷️" text="Categories" close={() => setOpen(false)} />
+          <NavItem to="/admin/playlists" icon="📚" text="Playlists" close={() => setOpen(false)} />
+          <NavItem to="/admin/users" icon="👤" text="Users" close={() => setOpen(false)} />
         </div>
 
         {/* LOGOUT */}
@@ -76,10 +89,10 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* MAIN */}
+      {/* ===== MAIN ===== */}
       <div className="main-wrap">
-        {/* TOPBAR – CHỈ HIỆN MOBILE */}
-       <div className="topbar">
+        {/* TOPBAR – CHỈ ANDROID */}
+        <div className="topbar">
           {isAndroid && (
             <button className="menu-btn" onClick={() => setOpen(!open)}>
               ☰
@@ -92,20 +105,21 @@ export default function AdminLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* OVERLAY – Android only */}
+      {isAndroid && open && (
+        <div className="overlay" onClick={() => setOpen(false)} />
+      )}
     </div>
   );
 }
 
-function isAndroidWebView() {
-  const ua = navigator.userAgent || "";
-  return /Android/i.test(ua) && /wv|Version\/\d+\.\d+/i.test(ua);
-}
-
-function NavItem({ to, icon, text, onClick }) {
+/* ===== NavItem ===== */
+function NavItem({ to, icon, text, close }) {
   return (
     <NavLink
       to={to}
-      onClick={onClick}
+      onClick={close}
       className={({ isActive }) => (isActive ? "active" : "")}
     >
       <span className="icon">{icon}</span>

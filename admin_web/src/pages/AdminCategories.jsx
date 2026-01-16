@@ -2,35 +2,81 @@ import React, { useEffect, useMemo, useState } from "react";
 import { db } from "../firebase";
 import { ref, onValue, set, update, remove } from "firebase/database";
 
+/* ===== helper ===== */
+const safe = (v, fb = "") => (v == null ? fb : v);
+
 export default function AdminCategories() {
+  /* ======================
+     CATEGORIES
+  ====================== */
   const [catMap, setCatMap] = useState({});
   const [q, setQ] = useState("");
-
-  // add/edit
-  const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState("add"); // add|edit
-  const [editId, setEditId] = useState("");
-  const [name, setName] = useState("");
+  const [selectedCat, setSelectedCat] = useState(null);
 
   useEffect(() => {
     const r = ref(db, "categories");
-    const unsub = onValue(r, (snap) => setCatMap(snap.val() || {}));
-    return () => unsub();
+    return onValue(r, (snap) => setCatMap(snap.val() || {}));
   }, []);
 
-  const cats = useMemo(() => {
-    const arr = Object.entries(catMap).map(([id, v]) => {
-      const n = typeof v === "string" ? v : (v?.name ?? "");
-      return { id, name: n };
-    });
+  const categories = useMemo(() => {
+    const arr = Object.entries(catMap).map(([id, v]) => ({
+      id,
+      name: safe(v?.name),
+    }));
 
-    arr.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    arr.sort((a, b) => a.name.localeCompare(b.name));
 
     const k = q.trim().toLowerCase();
     if (!k) return arr;
 
-    return arr.filter((c) => (`${c.id} ${c.name}`.toLowerCase().includes(k)));
+    return arr.filter((c) =>
+      `${c.id} ${c.name}`.toLowerCase().includes(k)
+    );
   }, [catMap, q]);
+
+  /* ======================
+     SONGS
+  ====================== */
+  const [songsMap, setSongsMap] = useState({});
+
+  useEffect(() => {
+    const r = ref(db, "songs");
+    return onValue(r, (snap) => setSongsMap(snap.val() || {}));
+  }, []);
+
+  /* ======================
+     FILTER SONGS BY CATEGORY
+  ====================== */
+ const songsByCategory = useMemo(() => {
+  if (!selectedCat) return [];
+
+  return Object.entries(songsMap)
+    .map(([key, s]) => ({
+      songKey: key,
+      ...s,
+    }))
+    .filter((s) => {
+      if (!s.category) return false;
+
+      // "Classic,Trending" -> ["classic", "trending"]
+      const cateArr = String(s.category)
+        .split(",")
+        .map((c) => c.trim().toLowerCase());
+
+      return cateArr.includes(
+        String(selectedCat.name).trim().toLowerCase()
+      );
+    });
+}, [songsMap, selectedCat]);
+
+
+  /* ======================
+     ADD / EDIT CATEGORY
+  ====================== */
+  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState("add");
+  const [editId, setEditId] = useState("");
+  const [name, setName] = useState("");
 
   const openAdd = () => {
     setMode("add");
@@ -42,7 +88,7 @@ export default function AdminCategories() {
   const openEdit = (c) => {
     setMode("edit");
     setEditId(c.id);
-    setName(c.name || "");
+    setName(c.name);
     setOpen(true);
   };
 
@@ -51,94 +97,144 @@ export default function AdminCategories() {
     if (!n) return alert("Nhập tên category");
 
     if (mode === "add") {
-      // id tự sinh theo timestamp
       const id = `cat_${Date.now()}`;
       await set(ref(db, `categories/${id}`), { name: n });
-      setOpen(false);
-      return;
+    } else {
+      await update(ref(db, `categories/${editId}`), { name: n });
     }
-
-    // edit
-    await update(ref(db, `categories/${editId}`), { name: n });
     setOpen(false);
   };
 
   const del = async (id) => {
-    const ok = window.confirm("Xóa category này?");
-    if (!ok) return;
+    if (!window.confirm("Xóa category này?")) return;
     await remove(ref(db, `categories/${id}`));
+    if (selectedCat?.id === id) setSelectedCat(null);
   };
 
   return (
     <div>
-      {/* Header theo style chung */}
+      {/* HEADER */}
       <div className="page-title">
-        <div>
-          <h1>Categories</h1>
-          
-        </div>
-
+        <h1>Categories</h1>
         <button className="btn btn-primary" onClick={openAdd}>
           + Add Category
         </button>
       </div>
 
-      {/* Card */}
-      <div className="card" style={{ padding: 16 }}>
-        <input
-          className="input"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search category..."
-        />
+      {/* GRID */}
+      <div className="pl-grid">
+        {/* LEFT */}
+        <div className="card pl-card">
+          <input
+            className="input"
+            placeholder="Search category..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
 
-        <div style={{ marginTop: 12, color: "var(--muted)" }}>
-          Tổng: <b style={{ color: "var(--text)" }}>{cats.length}</b>
-        </div>
-
-        {/* List */}
-        <div className="list" style={{ maxHeight: "62vh" }}>
-          {cats.map((c) => (
-            <div key={c.id} className="row">
-              <div className="row-head">
-                <div style={{ minWidth: 0 }}>
-                  <div className="row-title">{c.name || "(no name)"}</div>
-                  <div className="row-sub">id: {c.id}</div>
-                </div>
+          <div className="list" style={{ marginTop: 12 }}>
+            {categories.map((c) => (
+              <div
+                key={c.id}
+                className={`pl-item ${
+                  selectedCat?.id === c.id ? "is-active" : ""
+                }`}
+              >
+                <button
+                  className="pl-item-btn"
+                  onClick={() => setSelectedCat(c)}
+                >
+                  <div className="pl-item-name">{c.name}</div>
+                  <div className="pl-item-sub">id: {c.id}</div>
+                </button>
 
                 <div className="row-actions">
                   <button className="btn" onClick={() => openEdit(c)}>
                     Edit
                   </button>
                   <button
-                    className="btn"
+                    className="btn btn-danger"
                     onClick={() => del(c.id)}
-                    style={{
-                      borderColor: "rgba(239,68,68,0.35)",
-                      background: "rgba(239,68,68,0.12)",
-                      color: "#b91c1c",
-                      fontWeight: 900,
-                    }}
                   >
                     Delete
                   </button>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
 
-          {cats.length === 0 && (
-            <div style={{ color: "var(--muted)", padding: 12 }}>
-              Chưa có category.
-            </div>
+            {categories.length === 0 && (
+              <div className="note">Chưa có category</div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT */}
+        <div className="card pl-card">
+          {!selectedCat ? (
+            <div className="note">Chọn category để xem nhạc</div>
+          ) : (
+            <>
+              <div className="pl-title">
+                Category: {selectedCat.name}
+              </div>
+
+              <div className="pl-section">
+                Songs ({songsByCategory.length})
+              </div>
+
+              <div className="pl-songs">
+                {songsByCategory.length === 0 ? (
+                  <div className="note">Không có bài</div>
+                ) : (
+                  songsByCategory.map((s) => (
+                    <div key={s.songKey} className="pl-song-row">
+                      <div>
+                        <div className="pl-song-text">
+                          {s.title || "(no title)"}{" "}
+                          <span className="pl-song-artist">
+                            • {s.artist || "(no artist)"}
+                          </span>
+                        </div>
+
+                        {/* CATEGORY BADGES */}
+                       <div style={{ marginTop: 4 }}>
+  {String(s.category || "")
+    .split(",")
+    .map((c) => c.trim())
+    .filter(Boolean)
+    .map((c) => (
+      <span
+        key={c}
+        style={{
+          display: "inline-block",
+          padding: "2px 8px",
+          marginRight: 6,
+          borderRadius: 999,
+          fontSize: 12,
+          background: "#e0e7ff",
+          color: "#1e40af",
+          fontWeight: 600,
+        }}
+      >
+        {c}
+      </span>
+    ))}
+</div>
+
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>
 
-      {/* Modal */}
+      {/* MODAL */}
       {open && (
         <Modal
-          title={mode === "add" ? "➕ Add Category" : `✏️ Edit Category (${editId})`}
+          title={mode === "add" ? "➕ Add Category" : "✏️ Edit Category"}
           onClose={() => setOpen(false)}
         >
           <div className="label">Name</div>
@@ -146,7 +242,6 @@ export default function AdminCategories() {
             className="input"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="VD: KPop"
           />
 
           <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
@@ -163,7 +258,7 @@ export default function AdminCategories() {
   );
 }
 
-/* ============== Modal dùng class chung ============== */
+/* ===== MODAL ===== */
 function Modal({ title, onClose, children }) {
   return (
     <div className="overlay" onClick={onClose}>

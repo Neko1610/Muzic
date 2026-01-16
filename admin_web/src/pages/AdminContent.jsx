@@ -14,6 +14,8 @@ export default function SongsPage() {
   // ===== Realtime data =====
   const [songsMap, setSongsMap] = useState({});
   const [loading, setLoading] = useState(true);
+  const [addCats, setAddCats] = useState([]);
+  const [editCats, setEditCats] = useState([]);
 
   // ===== Search =====
   const [q, setQ] = useState("");
@@ -99,20 +101,27 @@ export default function SongsPage() {
   // =========================
   const generateId = () => `${Date.now()}_${Math.floor(Math.random() * 1000)}`;
   const normalizeUrl = (url) => (url || "").trim();
+  const parseCateString = (str) =>
+    String(str || "")
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean);
 
+  const joinCateArray = (arr) => arr.join(",");
   // =========================
   // ADD SONG
   // =========================
   const submitAdd = async () => {
     const title = addForm.title.trim();
     const artist = addForm.artist.trim();
-    const category = addForm.category.trim();
     const coverUrl = normalizeUrl(addForm.coverUrl);
     const mp3Url = normalizeUrl(addForm.mp3Url);
+    if (addCats.length === 0) return alert("Chọn ít nhất 1 category");
+
+    const category = joinCateArray(addCats);
 
     if (!title) return alert("Nhập title");
     if (!artist) return alert("Nhập artist");
-    if (!category) return alert("Chọn category");
     if (!coverUrl) return alert("Dán coverUrl (link ảnh)");
     if (!mp3Url) return alert("Dán mp3Url (link mp3)");
 
@@ -141,16 +150,20 @@ export default function SongsPage() {
   // OPEN EDIT
   // =========================
   const openEditSong = (song) => {
-    setEditKey(song.dbKey);
-    setEditForm({
-      title: song.title || "",
-      artist: song.artist || "",
-      category: song.category || "",
-      coverUrl: song.coverUrl || "",
-      mp3Url: song.mp3Url || "",
-    });
-    setOpenEdit(true);
-  };
+  setEditKey(song.dbKey);
+  setEditForm({
+    title: song.title || "",
+    artist: song.artist || "",
+    category: song.category || "",
+    coverUrl: song.coverUrl || "",
+    mp3Url: song.mp3Url || "",
+  });
+
+  // 🔥 QUAN TRỌNG
+  setEditCats(parseCateString(song.category));
+  setOpenEdit(true);
+};
+
 
   // =========================
   // SAVE EDIT
@@ -161,12 +174,12 @@ export default function SongsPage() {
     const title = editForm.title.trim();
     const artist = editForm.artist.trim();
     const category = editForm.category.trim();
+    if (!category) return alert("Chọn category");
     const coverUrl = normalizeUrl(editForm.coverUrl);
     const mp3Url = normalizeUrl(editForm.mp3Url);
 
     if (!title) return alert("Nhập title");
     if (!artist) return alert("Nhập artist");
-    if (!category) return alert("Chọn category");
     if (!coverUrl) return alert("Dán coverUrl");
     if (!mp3Url) return alert("Dán mp3Url");
 
@@ -248,7 +261,26 @@ export default function SongsPage() {
                     {s.title || "(no title)"} <span className="songs-dot">•</span>{" "}
                     <span className="songs-dim">{s.artist || "(no artist)"}</span>{" "}
                     <span className="songs-dot">•</span>{" "}
-                    <span className="songs-tag">{s.category || "no category"}</span>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {String(s.category)
+                      .split(",")
+                      .map((c) => c.trim())
+                      .map((c) => (
+                        <span
+                          key={c}
+                          style={{
+                            padding: "2px 8px",
+                            borderRadius: 999,
+                            background: "#e0e7ff",
+                            color: "#1e40af",
+                            fontSize: 12,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {c}
+                        </span>
+                      ))}
+                  </div>
                   </div>
 
                   <div className="songs-meta">
@@ -299,19 +331,25 @@ export default function SongsPage() {
           </div>
 
           <div style={{ marginTop: 10 }}>
-            <div className="label">Category</div>
-            <select
-              className="input"
-              value={addForm.category}
-              onChange={(e) => setAddForm((p) => ({ ...p, category: e.target.value }))}
-            >
-              <option value="">-- chọn category --</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+           <div className="label">Category (chọn nhiều)</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                {categories.map((c) => (
+                  <label key={c} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <input
+                      type="checkbox"
+                      checked={addCats.includes(c)}
+                      onChange={(e) => {
+                        setAddCats((prev) =>
+                          e.target.checked
+                            ? [...prev, c]
+                            : prev.filter((x) => x !== c)
+                        );
+                      }}
+                    />
+                    {c}
+                  </label>
+                ))}
+              </div>
           </div>
 
           <div style={{ marginTop: 10 }}>
@@ -369,19 +407,25 @@ export default function SongsPage() {
           </div>
 
           <div style={{ marginTop: 10 }}>
-            <div className="label">Category</div>
-            <select
-              className="input"
-              value={editForm.category}
-              onChange={(e) => setEditForm((p) => ({ ...p, category: e.target.value }))}
-            >
-              <option value="">-- chọn category --</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            <div className="label">Category (chọn nhiều)</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                  {categories.map((c) => (
+                    <label key={c} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <input
+                        type="checkbox"
+                        checked={editCats.includes(c)}
+                        onChange={(e) => {
+                          setEditCats((prev) =>
+                            e.target.checked
+                              ? [...prev, c]
+                              : prev.filter((x) => x !== c)
+                          );
+                        }}
+                      />
+                      {c}
+                    </label>
+                  ))}
+                </div>
           </div>
 
           <div style={{ marginTop: 10 }}>
