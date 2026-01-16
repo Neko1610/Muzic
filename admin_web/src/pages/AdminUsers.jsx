@@ -282,12 +282,20 @@ export default function AdminUsers() {
                     (Tuỳ chọn) đổi role:
                   </div>
                   <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    <button className="btn" onClick={() => setRoleUser("user")}>
+                  <button
+                      className={`btn ${selectedUser?.role === "user" ? "btn-primary" : ""}`}
+                      onClick={() => setRoleUser("user")}
+                    >
                       Set user
                     </button>
-                    <button className="btn btn-primary" onClick={() => setRoleUser("admin")}>
+
+                    <button
+                      className={`btn ${selectedUser?.role === "admin" ? "btn-primary" : ""}`}
+                      onClick={() => setRoleUser("admin")}
+                    >
                       Set admin
                     </button>
+
                   </div>
                 </div>
 
