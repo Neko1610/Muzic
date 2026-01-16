@@ -2,6 +2,7 @@ package com.example.music.Fragments;
 
 import android.content.Intent;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -30,6 +31,11 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.Firebase;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 
 public class SignInFragment extends Fragment {
@@ -85,7 +91,6 @@ public class SignInFragment extends Fragment {
         String userEmail = email.getText().toString().trim();
         String userPassword = password.getText().toString().trim();
 
-        // Validate input
         if (userEmail.isEmpty() || !userEmail.matches("[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+")) {
             email.setError("Invalid Email");
             return;
@@ -95,25 +100,74 @@ public class SignInFragment extends Fragment {
             return;
         }
 
-        // Show loading và disable button
         signInBar.setVisibility(View.VISIBLE);
         signInButton.setEnabled(false);
 
         mAuth.signInWithEmailAndPassword(userEmail, userPassword)
                 .addOnCompleteListener(task -> {
-                    // Ẩn loading và enable button dù thành công hay thất bại
-                    signInBar.setVisibility(View.INVISIBLE);
-                    signInButton.setEnabled(true);
 
-                    if (task.isSuccessful()) {
-                        Intent intent = new Intent(getActivity(), MainActivity.class);
-                        startActivity(intent);
-                        getActivity().finish();
-                    } else {
-                        Toast.makeText(getContext(),
+                    if (!task.isSuccessful()) {
+                        signInBar.setVisibility(View.INVISIBLE);
+                        signInButton.setEnabled(true);
+                        Toast.makeText(
+                                getContext(),
                                 task.getException() != null ? task.getException().getMessage() : "Sign-in failed",
-                                Toast.LENGTH_SHORT).show();
+                                Toast.LENGTH_SHORT
+                        ).show();
+                        return;
                     }
+
+                    // ✅ ĐĂNG NHẬP OK → ĐỌC ROLE TỪ REALTIME DB
+                    String uid = mAuth.getCurrentUser().getUid();
+
+                    DatabaseReference userRef = FirebaseDatabase.getInstance()
+                            .getReference("users")
+                            .child(uid)
+                            .child("role");
+
+                    userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+
+                            signInBar.setVisibility(View.INVISIBLE);
+                            signInButton.setEnabled(true);
+
+                            if (!snapshot.exists()) {
+                                Toast.makeText(getContext(), "Role not found", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            String role = snapshot.getValue(String.class);
+
+                            if ("admin".equals(role)) {
+
+                                // 👉 MỞ WEB ADMIN
+                                Intent intent = new Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse("https://muzic-sigma.vercel.app")
+                                );
+                                startActivity(intent);
+
+                                // 🔥 LOGOUT ADMIN KHỎI APP
+                                FirebaseAuth.getInstance().signOut();
+
+                                getActivity().finish();
+                            } else {
+                                // 👉 USER → APP
+                                Intent intent = new Intent(getActivity(), MainActivity.class);
+                                startActivity(intent);
+                                getActivity().finish();
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            signInBar.setVisibility(View.INVISIBLE);
+                            signInButton.setEnabled(true);
+                            Toast.makeText(getContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 });
     }
+
 }

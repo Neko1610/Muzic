@@ -11,6 +11,7 @@ function getInitial(nameOrEmail) {
 
 export default function AdminLayout() {
   const [me, setMe] = useState(null);
+  const [open, setOpen] = useState(false); // ✅ NEW
   const user = auth.currentUser;
   const navigate = useNavigate();
 
@@ -25,6 +26,7 @@ export default function AdminLayout() {
   const email = me?.email || user?.email || "(no email)";
   const role = me?.role || "user";
   const uid = user?.uid || "";
+  const isAndroid = isAndroidWebView();
 
   const handleLogout = async () => {
     const ok = window.confirm("Bạn có chắc muốn đăng xuất?");
@@ -35,7 +37,8 @@ export default function AdminLayout() {
 
   return (
     <div className="admin-shell">
-      <aside className="sidebar">
+      {/* SIDEBAR */}
+      <aside className={`sidebar ${open ? "open" : ""}`}>
         {/* PROFILE */}
         <div className="card profile">
           <div className="avatar">{getInitial(name || email)}</div>
@@ -44,7 +47,7 @@ export default function AdminLayout() {
             <p className="name">{name}</p>
             <div className="email">{email}</div>
             <div className="badge">Role: {role}</div>
-            <div style={{ marginTop: 10, color: "var(--muted)", fontSize: 12 }}>
+            <div style={{ marginTop: 10, fontSize: 12, opacity: 0.7 }}>
               UID: {uid.slice(0, 10)}...{uid.slice(-6)}
             </div>
           </div>
@@ -54,19 +57,18 @@ export default function AdminLayout() {
         <div className="card nav">
           <h4>Các tab chức năng</h4>
 
-          <NavItem to="/admin/content" icon="🎵" text="Songs" />
-          <NavItem to="/admin/categories" icon="🏷️" text="Categories" />
-          <NavItem to="/admin/playlists" icon="📚" text="Playlists" />
-          <NavItem to="/admin/users" icon="👤" text="Users" />
+        <NavItem to="/admin/content" icon="🎵" text="Songs" onClick={() => setOpen(false)} />
+        <NavItem to="/admin/categories" icon="🏷️" text="Categories" onClick={() => setOpen(false)} />
+        <NavItem to="/admin/playlists" icon="📚" text="Playlists" onClick={() => setOpen(false)} />
+        <NavItem to="/admin/users" icon="👤" text="Users" onClick={() => setOpen(false)} />
 
-          {/* ❌ ĐÃ ẨN ROLES */}
         </div>
 
-        {/* LOGOUT – GHIM DƯỚI */}
+        {/* LOGOUT */}
         <div className="card" style={{ marginTop: "auto" }}>
           <button
             className="btn-danger"
-            style={{ width: "100%", padding: "12px", fontWeight: 900 ,borderRadius: 999,}}
+            style={{ width: "100%", padding: 12, borderRadius: 999 }}
             onClick={handleLogout}
           >
             LOG OUT
@@ -74,19 +76,37 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      <main className="card main">
-        <Outlet />
-      </main>
+      {/* MAIN */}
+      <div className="main-wrap">
+        {/* TOPBAR – CHỈ HIỆN MOBILE */}
+       <div className="topbar">
+          {isAndroid && (
+            <button className="menu-btn" onClick={() => setOpen(!open)}>
+              ☰
+            </button>
+          )}
+          <span>Admin Dashboard</span>
+        </div>
+
+        <main className="card main">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
 
-function NavItem({ to, icon, text }) {
+function isAndroidWebView() {
+  const ua = navigator.userAgent || "";
+  return /Android/i.test(ua) && /wv|Version\/\d+\.\d+/i.test(ua);
+}
+
+function NavItem({ to, icon, text, onClick }) {
   return (
     <NavLink
       to={to}
+      onClick={onClick}
       className={({ isActive }) => (isActive ? "active" : "")}
-      end={false}
     >
       <span className="icon">{icon}</span>
       {text}
