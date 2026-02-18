@@ -13,7 +13,7 @@ import android.widget.TextView;
 
 import com.example.music.Models.Song;
 import com.example.music.R;
-import com.example.music.SongAdapter;
+import com.example.music.Adapters.SongAdapter;
 import com.google.firebase.database.*;
 
 import java.util.ArrayList;

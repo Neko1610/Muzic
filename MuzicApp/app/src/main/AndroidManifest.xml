@@ -40,7 +40,7 @@
             android:name=".Activities.MainActivity"
             android:exported="true" /> <!-- MusicService -->
         <service
-            android:name=".Activities.MusicService"
+            android:name=".Service.MusicService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback"
             tools:ignore="ForegroundServicePermission" />

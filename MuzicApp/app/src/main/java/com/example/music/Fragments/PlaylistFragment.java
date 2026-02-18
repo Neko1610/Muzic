@@ -13,7 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.music.Models.Playlist;
-import com.example.music.PlaylistAdapter;
+import com.example.music.Adapters.PlaylistAdapter;
 import com.example.music.R;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;

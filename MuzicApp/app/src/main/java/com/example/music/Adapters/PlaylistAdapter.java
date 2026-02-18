@@ -1,4 +1,4 @@
-package com.example.music;
+package com.example.music.Adapters;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.music.Fragments.SongPlaylistFragment;
 import com.example.music.Models.Playlist;
+import com.example.music.R;
 
 import java.util.List;
 

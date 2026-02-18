@@ -22,10 +22,11 @@ import androidx.fragment.app.Fragment;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.example.music.Activities.MainActivity;
-import com.example.music.Activities.MusicService;
+import com.example.music.Service.MusicService;
 import com.example.music.Models.Song;
-import com.example.music.MusicStateManager;
+import com.example.music.Service.MusicStateManager;
 import com.example.music.R;
+import com.example.music.Service.PlayTrackerService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -53,6 +54,7 @@ public class NowPlayingFragment extends Fragment {
 
     private boolean isFavorite = false;
     private boolean isRandom = false;
+    public static final String ACTION_UPDATE_PROGRESS = "ACTION_UPDATE_PROGRESS";
 
     public static NowPlayingFragment newInstance(List<Song> songs, int index) {
         NowPlayingFragment fragment = new NowPlayingFragment();
@@ -93,7 +95,15 @@ public class NowPlayingFragment extends Fragment {
         if (getArguments() != null) {
             songList = (List<Song>) getArguments().getSerializable(ARG_SONGS);
             currentIndex = getArguments().getInt(ARG_INDEX, 0);
-            loadSong(currentIndex, true);
+
+            // 🔥 CHỈ load nếu chưa có bài nào đang phát
+            Song current = MusicStateManager.getInstance()
+                    .getCurrentSong()
+                    .getValue();
+
+            if (current == null) {
+                loadSong(currentIndex, true);
+            }
         }
 
         btnPlay.setOnClickListener(v -> togglePlayPause());
@@ -144,6 +154,11 @@ public class NowPlayingFragment extends Fragment {
 
         return view;
     }
+    public void playNewSong(List<Song> songs, int index) {
+        this.songList = songs;
+        this.currentIndex = index;
+        loadSong(index, true);
+    }
 
     // Nhận tiến độ
     private final BroadcastReceiver progressReceiver = new BroadcastReceiver() {
@@ -179,7 +194,20 @@ public class NowPlayingFragment extends Fragment {
 
     private void loadSong(int index, boolean autoPlay) {
         Song song = songList.get(index);
+
+        // 🔥 Hiển thị MiniPlayer trước
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).showMiniPlayer(song,
+                    MusicStateManager.getInstance().getIsPlaying().getValue() != null &&
+                            MusicStateManager.getInstance().getIsPlaying().getValue());
+        }
+
+        // 🔥 Lưu recently (nhẹ)
         saveToRecently(song);
+
+        // 🔥 Track play (chạy async nên không block UI)
+        PlayTrackerService tracker = new PlayTrackerService();
+        tracker.trackPlay(song);
 
         if (autoPlay) {
             Intent intent = new Intent(getContext(), MusicService.class);
@@ -187,13 +215,9 @@ public class NowPlayingFragment extends Fragment {
             intent.putExtra("song", song);
             getContext().startService(intent);
         }
-
-        if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).showMiniPlayer(song,
-                    MusicStateManager.getInstance().getIsPlaying().getValue() != null &&
-                            MusicStateManager.getInstance().getIsPlaying().getValue());
-        }
     }
+
+
 
     private void togglePlayPause() {
         Boolean isPlaying = MusicStateManager.getInstance().getIsPlaying().getValue();
@@ -238,17 +262,10 @@ public class NowPlayingFragment extends Fragment {
     private void saveToRecently(Song song) {
         if (song == null || dbRef == null) return;
 
-        // Thêm mới mỗi lần nghe
-        dbRef.push().setValue(song);
-
-        // (Tùy chọn) Giữ tối đa 20 bài gần nhất
-        dbRef.get().addOnSuccessListener(snapshot -> {
-            if (snapshot.getChildrenCount() > 20) {
-                DataSnapshot first = snapshot.getChildren().iterator().next();
-                first.getRef().removeValue();
-            }
-        });
+        // Dùng songId làm key → không duplicate
+        dbRef.child(song.getId()).setValue(song);
     }
+
 
     private void showAlbumSelectionDialog() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();

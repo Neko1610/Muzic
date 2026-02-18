@@ -8,6 +8,9 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminRoles from "./pages/AdminRoles";
 import AdminCategories from "./pages/AdminCategories";
 import AdminPlaylists from "./pages/AdminPlaylists";
+import AdminAnalytics from "./pages/AdminAnalytics";
+
+
 
 export default function App() {
   return (
@@ -29,7 +32,7 @@ export default function App() {
           <Route path="content" element={<AdminContent />} />
           <Route path="categories" element={<AdminCategories />} />
           <Route path="playlists" element={<AdminPlaylists />} />
-
+          <Route path="/admin/analytics" element={<AdminAnalytics />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="roles" element={<AdminRoles />} />
         </Route>

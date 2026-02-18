@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import java.text.Normalizer;
 import java.util.regex.Pattern;
+import com.example.music.Service.RecommendationService;
 
 
 import androidx.annotation.NonNull;
@@ -17,9 +18,9 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.music.CategoryAdapter;
-import com.example.music.PlaylistAdapter;
-import com.example.music.SongAdapter;
+import com.example.music.Adapters.CategoryAdapter;
+import com.example.music.Adapters.PlaylistAdapter;
+import com.example.music.Adapters.SongAdapter;
 import com.example.music.Models.Category;
 import com.example.music.Models.Playlist;
 import com.example.music.Models.Song;
@@ -124,9 +125,9 @@ public class HomeFragment extends Fragment {
         // ====== Firebase ======
         dbRef = FirebaseDatabase.getInstance().getReference();
         loadCategories();
-        loadHot();
         loadPlaylists();
         loadRecently();
+        loadRecommended();
         loadSongsFromFirebase(); // load cho search
 
         return view;
@@ -149,20 +150,23 @@ public class HomeFragment extends Fragment {
         });
     }
 
-    private void loadHot() {
-        dbRef.child("hotRecommended").addValueEventListener(new ValueEventListener() {
-            @Override public void onDataChange(@NonNull DataSnapshot snapshot) {
-                hotList.clear();
-                for (DataSnapshot snap : snapshot.getChildren()) {
-                    Song s = snap.getValue(Song.class);
-                    if (s != null) hotList.add(s);
-                }
-                hotAdapter.notifyDataSetChanged();
-                startAutoScrollHot();
-            }
-            @Override public void onCancelled(@NonNull DatabaseError error) {}
+    private void loadRecommended() {
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        String uid = user.getUid();
+
+        RecommendationService service = new RecommendationService();
+
+        service.getRecommendations(uid, songs -> {
+            hotList.clear();
+            hotList.addAll(songs);
+            hotAdapter.notifyDataSetChanged();
+            startAutoScrollHot();
         });
     }
+
 
     private void loadPlaylists() {
         dbRef.child("playlists").addValueEventListener(new ValueEventListener() {

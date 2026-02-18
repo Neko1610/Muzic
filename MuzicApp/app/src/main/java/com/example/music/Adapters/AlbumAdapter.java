@@ -1,4 +1,4 @@
-package com.example.music;
+package com.example.music.Adapters;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -12,6 +12,7 @@ import android.app.AlertDialog;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.music.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;

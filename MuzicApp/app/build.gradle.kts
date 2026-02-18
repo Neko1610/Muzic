@@ -39,6 +39,7 @@ android {
 dependencies {
     // Firebase BOM quản lý version
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+    implementation ("com.google.android.exoplayer:exoplayer:2.19.1")
 
     // Firebase modules
     implementation("com.google.firebase:firebase-analytics")       // Analytics

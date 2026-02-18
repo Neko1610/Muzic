@@ -75,6 +75,8 @@ export default function AdminLayout() {
           <NavItem to="/admin/categories" icon="🏷️" text="Categories" close={() => setOpen(false)} />
           <NavItem to="/admin/playlists" icon="📚" text="Playlists" close={() => setOpen(false)} />
           <NavItem to="/admin/users" icon="👤" text="Users" close={() => setOpen(false)} />
+          <NavItem to="/admin/analytics" icon="📊" text="Analytics" close={() => setOpen(false)} />
+
         </div>
 
         {/* LOGOUT */}
@@ -98,7 +100,7 @@ export default function AdminLayout() {
               ☰
             </button>
           )}
-          <span>Admin Dashboard</span>
+        
         </div>
 
         <main className="card main">

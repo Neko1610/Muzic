@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.music.Models.Album;
 import com.example.music.Models.Song;
 import com.example.music.R;
-import com.example.music.SongAdapter;
+import com.example.music.Adapters.SongAdapter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
