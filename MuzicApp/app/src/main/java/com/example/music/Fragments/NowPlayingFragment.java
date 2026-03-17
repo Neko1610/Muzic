@@ -95,6 +95,18 @@ public class NowPlayingFragment extends Fragment {
         if (getArguments() != null) {
             songList = (List<Song>) getArguments().getSerializable(ARG_SONGS);
             currentIndex = getArguments().getInt(ARG_INDEX, 0);
+            if (songList == null) {
+                songList = new ArrayList<>();
+
+                Song song = new Song();
+                song.setTitle(getArguments().getString("title"));
+                song.setArtist(getArguments().getString("artist"));
+                song.setCoverUrl(getArguments().getString("cover"));
+                song.setMp3Url(getArguments().getString("url"));
+
+                songList.add(song);
+                currentIndex = 0;
+            }
 
             // 🔥 CHỈ load nếu chưa có bài nào đang phát
             Song current = MusicStateManager.getInstance()
@@ -260,10 +272,14 @@ public class NowPlayingFragment extends Fragment {
 
     // ✅ FIX: Lưu lịch sử đúng cách, không bị ghi đè
     private void saveToRecently(Song song) {
+
         if (song == null || dbRef == null) return;
 
-        // Dùng songId làm key → không duplicate
-        dbRef.child(song.getId()).setValue(song);
+        if (song.getId() == null) {
+            dbRef.push().setValue(song);
+        } else {
+            dbRef.child(song.getId()).setValue(song);
+        }
     }
 
 

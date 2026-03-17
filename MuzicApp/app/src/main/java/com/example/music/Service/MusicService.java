@@ -222,7 +222,7 @@ public class MusicService extends Service {
                 .setLargeIcon(bitmap)
                 .addAction(isPlaying ? R.drawable.ic_stop : R.drawable.ic_play,
                         isPlaying ? "Pause" : "Play", playPending)
-                .addAction(R.drawable.x, "Close", stopPending)
+                .addAction(R.drawable.ic_close, "Close", stopPending)
                 .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
                         .setShowActionsInCompactView(0, 1))
                 .setOnlyAlertOnce(true)

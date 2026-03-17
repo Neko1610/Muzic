@@ -5,6 +5,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
@@ -17,6 +18,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.bumptech.glide.Glide;
+import com.example.music.Fragments.ChatBotFragment;
 import com.example.music.Fragments.HomeFragment;
 import com.example.music.Fragments.MiniPlayerFragment;
 import com.example.music.Fragments.MusicFragment;
@@ -122,7 +124,17 @@ public class MainActivity extends AppCompatActivity {
         imgAvatar.setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, ProfileActivity.class));
         });
+        //======= Chat Bot=======
+        ImageButton chatBubble = binding.chatBubble;
 
+        chatBubble.setOnClickListener(v -> {
+
+            ChatBotFragment botFragment = new ChatBotFragment();
+
+            botFragment.show(getSupportFragmentManager(),
+                    "BotFragment");
+
+        });
         // Menu item
         navView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();

@@ -22,7 +22,19 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.app.Activity;
 
+import com.google.android.gms.auth.api.signin.*;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+
+import com.google.android.material.card.MaterialCardView;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.auth.FirebaseUser;
 import com.example.music.Activities.MainActivity;
 import com.example.music.R;
 import com.google.android.gms.tasks.OnCanceledListener;
@@ -48,6 +60,9 @@ public class SignInFragment extends Fragment {
     private ProgressBar signInBar;
     private Button signInButton;
     private FirebaseAuth mAuth;
+    private GoogleSignInClient mGoogleSignInClient;
+    private ActivityResultLauncher<Intent> googleLauncher;
+    private MaterialCardView googleSignInButton;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -62,7 +77,7 @@ public class SignInFragment extends Fragment {
         password = view.findViewById(R.id.password);
         signInBar = view.findViewById(R.id.signInBar);
         signInButton = view.findViewById(R.id.signinButton);
-
+        googleSignInButton = view.findViewById(R.id.googleSignInButton);
         mAuth = FirebaseAuth.getInstance();
 
         // Ẩn ProgressBar lúc khởi tạo
@@ -78,8 +93,119 @@ public class SignInFragment extends Fragment {
         resetPassword.setOnClickListener(v -> setFragment(new ResetPasswordFragment()));
 
         signInButton.setOnClickListener(v -> signInWithFirebase());
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        mGoogleSignInClient = GoogleSignIn.getClient(requireActivity(), gso);
+
+        googleLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        Task<GoogleSignInAccount> task =
+                                GoogleSignIn.getSignedInAccountFromIntent(data);
+                        handleGoogleResult(task);
+                    }
+                });
+
+        googleSignInButton.setOnClickListener(v -> {
+            Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+            googleLauncher.launch(signInIntent);
+        });
+    }
+    private void handleGoogleResult(Task<GoogleSignInAccount> task) {
+        try {
+            GoogleSignInAccount account = task.getResult(ApiException.class);
+            firebaseAuthWithGoogle(account.getIdToken());
+        } catch (ApiException e) {
+            Toast.makeText(getContext(), "Google Sign In Failed", Toast.LENGTH_SHORT).show();
+        }
     }
 
+    private void firebaseAuthWithGoogle(String idToken) {
+
+        AuthCredential credential =
+                GoogleAuthProvider.getCredential(idToken, null);
+
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(requireActivity(), task -> {
+
+                    if (!task.isSuccessful()) {
+                        Toast.makeText(getContext(),
+                                "Authentication Failed",
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    FirebaseUser user = mAuth.getCurrentUser();
+                    String uid = user.getUid();
+
+                    DatabaseReference userRef = FirebaseDatabase.getInstance()
+                            .getReference("users")
+                            .child(uid);
+
+                    userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+
+                            if (!snapshot.exists()) {
+
+                                // 🔥 USER MỚI → TẠO DỮ LIỆU
+                                DatabaseReference newUserRef =
+                                        FirebaseDatabase.getInstance()
+                                                .getReference("users")
+                                                .child(uid);
+
+                                newUserRef.child("email")
+                                        .setValue(user.getEmail());
+
+                                newUserRef.child("name")
+                                        .setValue(user.getDisplayName());
+
+                                newUserRef.child("role")
+                                        .setValue("user");
+
+                                goToMain();
+                                return;
+                            }
+
+                            String role = snapshot.child("role").getValue(String.class);
+
+                            if ("admin".equals(role)) {
+
+                                Intent intent = new Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse("https://muzic-sigma.vercel.app")
+                                );
+                                startActivity(intent);
+
+                                FirebaseAuth.getInstance().signOut();
+                                requireActivity().finish();
+
+                            } else {
+                                goToMain();
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            Toast.makeText(getContext(),
+                                    error.getMessage(),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                });
+    }
+
+    private void goToMain() {
+        Intent intent = new Intent(getActivity(), MainActivity.class);
+        startActivity(intent);
+        requireActivity().finish();
+    }
     private void setFragment(Fragment fragment) {
         FragmentTransaction fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
         fragmentTransaction.setCustomAnimations(R.anim.form_right, R.anim.out_form_left);

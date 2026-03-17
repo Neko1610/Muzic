@@ -7,9 +7,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import java.text.Normalizer;
 import java.util.regex.Pattern;
+
 import com.example.music.Service.RecommendationService;
 
 
@@ -107,6 +109,14 @@ public class HomeFragment extends Fragment {
         // ====== View All ======
         TextView viewAllRecently = view.findViewById(R.id.tvViewAllRecently);
         TextView viewAllPlaylist = view.findViewById(R.id.tvViewAllPlaylist);
+        TextView viewAllRecommend = view.findViewById(R.id.tvViewAllRecommend);
+
+        viewAllRecommend.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.frame_layout, new RecommendFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
 
         viewAllRecently.setOnClickListener(v -> {
             getParentFragmentManager().beginTransaction()
@@ -122,6 +132,7 @@ public class HomeFragment extends Fragment {
                     .commit();
         });
 
+
         // ====== Firebase ======
         dbRef = FirebaseDatabase.getInstance().getReference();
         loadCategories();
@@ -129,9 +140,11 @@ public class HomeFragment extends Fragment {
         loadRecently();
         loadRecommended();
         loadSongsFromFirebase(); // load cho search
-
+    
         return view;
     }
+
+
 
     // ================== LOAD DATA ==================
     private void loadCategories() {

@@ -25,7 +25,17 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.FirebaseFirestore;
+import android.app.Activity;
 
+import com.google.android.gms.auth.api.signin.*;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.*;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+
+import com.google.android.material.card.MaterialCardView;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,7 +48,9 @@ public class SignUpFragment extends Fragment {
 
     private FirebaseAuth mAuth;
     private FirebaseFirestore firebaseFirestore;
-
+    private GoogleSignInClient mGoogleSignInClient;
+    private ActivityResultLauncher<Intent> googleLauncher;
+    private MaterialCardView googleSignUpButton;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -51,7 +63,7 @@ public class SignUpFragment extends Fragment {
         signUpBtn = view.findViewById(R.id.signUpButton);
         signUpBar = view.findViewById(R.id.signUpBar);
         alreadyHaveAccount = view.findViewById(R.id.already_have_an_account);
-
+        googleSignUpButton = view.findViewById(R.id.googleSignUpButton);
         // khởi tạo Firebase
         mAuth = FirebaseAuth.getInstance();
         firebaseFirestore = FirebaseFirestore.getInstance();
@@ -83,8 +95,89 @@ public class SignUpFragment extends Fragment {
         confirmPassword.addTextChangedListener(inputWatcher);
 
         signUpBtn.setOnClickListener(v -> checkEmailAndPassword());
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        mGoogleSignInClient = GoogleSignIn.getClient(requireActivity(), gso);
+
+        googleLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        Task<GoogleSignInAccount> task =
+                                GoogleSignIn.getSignedInAccountFromIntent(data);
+                        handleGoogleResult(task);
+                    }
+                });
+
+        googleSignUpButton.setOnClickListener(v -> {
+            Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+            googleLauncher.launch(signInIntent);
+        });
+    }
+    private void handleGoogleResult(Task<GoogleSignInAccount> task) {
+        try {
+            GoogleSignInAccount account = task.getResult(ApiException.class);
+            firebaseAuthWithGoogle(account.getIdToken());
+        } catch (ApiException e) {
+            Toast.makeText(getContext(), "Google Sign Up Failed", Toast.LENGTH_SHORT).show();
+        }
     }
 
+    private void firebaseAuthWithGoogle(String idToken) {
+
+        AuthCredential credential =
+                GoogleAuthProvider.getCredential(idToken, null);
+
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(requireActivity(), task -> {
+
+                    if (!task.isSuccessful()) {
+                        Toast.makeText(getActivity(),
+                                "Authentication Failed",
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    FirebaseUser user = mAuth.getCurrentUser();
+                    if (user == null) return;
+
+                    String userId = user.getUid();
+
+                    boolean isNewUser =
+                            task.getResult().getAdditionalUserInfo().isNewUser();
+
+                    if (isNewUser) {
+
+                        Map<String, Object> userMap = new HashMap<>();
+                        userMap.put("userId", userId);
+                        userMap.put("email", user.getEmail());
+                        userMap.put("name", user.getDisplayName());
+                        userMap.put("role", "user");   // 🔥 THÊM ROLE
+
+                        // Firestore
+                        firebaseFirestore.collection("Users")
+                                .document(userId)
+                                .set(userMap);
+
+                        // Realtime DB
+                        FirebaseDatabase.getInstance()
+                                .getReference("users")
+                                .child(userId)
+                                .setValue(userMap);
+                    }
+
+                    Toast.makeText(getActivity(),
+                            "Welcome " + user.getDisplayName(),
+                            Toast.LENGTH_SHORT).show();
+
+                    startActivity(new Intent(getActivity(), MainActivity.class));
+                    requireActivity().finish();
+                });
+    }
     private void checkInputs() {
         if (!TextUtils.isEmpty(userName.getText())) {
             if (!TextUtils.isEmpty(email.getText())) {
